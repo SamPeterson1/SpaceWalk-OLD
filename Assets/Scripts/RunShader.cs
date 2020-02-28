@@ -24,7 +24,6 @@ public class RunShader
     public Vector3[] run(float[] densities)
     {
 
-        Optimizer.begin();
         int kernelHandle = shader.FindKernel("testing");
         ComputeBuffer densitiesBuffer = new ComputeBuffer(densities.Length, 4);
         densitiesBuffer.SetData(densities);
@@ -52,7 +51,6 @@ public class RunShader
             outVerts[i*3 + 2] = triangles[i].pointC;
         }
 
-        Debug.Log(Optimizer.getDeltaTime());
         return outVerts;
     }
 

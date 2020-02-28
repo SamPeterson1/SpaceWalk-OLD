@@ -9,6 +9,7 @@ public class TerrainGenerator : MonoBehaviour
     public ComputeShader compute;
     public RunShader shader;
     private List<TerrainChunk> chunks;
+
     void Start()
     {
         float foo = Time.time;
@@ -31,7 +32,9 @@ public class TerrainGenerator : MonoBehaviour
 
     }
 
-        void genChunk(Vector3 offset)
+
+
+    void genChunk(Vector3 offset)
     {
         TerrainChunk chunk = new TerrainChunk(new Vector3Int(40, 40, 40), offset, shape, shader);
         chunks.Add(chunk);

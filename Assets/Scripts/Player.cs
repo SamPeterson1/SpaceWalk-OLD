@@ -14,18 +14,23 @@ public class Player : MonoBehaviour
 
     bool rising = false;
     bool falling = false;
+    Vector3Int deltaChunk;
 
     Rigidbody body;
+
+    Vector3Int chunkPos;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         body = GetComponent<Rigidbody>();
+        chunkPos = new Vector3Int(0, 0, 0);
+        deltaChunk = new Vector3Int(0, 0, 0);
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        
         if (Input.GetKey(KeyCode.Escape))
         {
             Cursor.lockState = CursorLockMode.None;
@@ -70,11 +75,31 @@ public class Player : MonoBehaviour
         Vector3 rotation = new Vector3(rotX, rotY, 0);
         transform.rotation = Quaternion.Euler(rotation);
 
-        Vector3 foo = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-        foo.Scale(new Vector3(1 / 39f, 1 / 39f, 1 / 39f));
-        Debug.Log((int)foo.x + " " + (int)foo.y + " " + (int)foo.z);
+       
+        Vector3Int pastChunk = new Vector3Int(chunkPos.x, chunkPos.y, chunkPos.z);
+        chunkPos = TerrainChunk.getChunkFromPos(transform.position);
+
+        deltaChunk = pastChunk - chunkPos;
+        
     }
 
+    
+
+    public Vector3Int getDeltaChunk()
+    {
+        return deltaChunk;
+    }
+
+    public bool changedChunks()
+    {
+        return !deltaChunk.Equals(new Vector3Int(0,0,0));
+    }
+
+    public Vector3Int getChunkPosition()
+    {
+        return chunkPos;
+    }
+    
     private void OnCollisionEnter(Collision collision)
     {
         falling = false;

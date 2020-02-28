@@ -1,23 +1,2 @@
 Base path: 'C:/Program Files/Unity/Hub/Editor/2019.3.2f1/Editor/Data', plugins path 'C:/Program Files/Unity/Hub/Editor/2019.3.2f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
-Cmd: preprocessCompute
-  insize=19419 outsize=19418 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=19418 outsize=68642 ok=1
-Cmd: preprocessCompute
-  insize=19419 outsize=19418 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=19418 outsize=68642 ok=1
-Cmd: preprocessCompute
-  insize=19347 outsize=19346 ok=1
-Cmd: compileComputeKernel
-  error: 2 plat 4 at FirstShader.compute(367): syntax error: unexpected token '}'
-  api=4 insize=19346 outsize=0 ok=0
-Cmd: preprocessCompute
-  insize=19252 outsize=19251 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=19251 outsize=68530 ok=1
-Cmd: preprocessCompute
-  insize=19419 outsize=19418 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=19418 outsize=68642 ok=1

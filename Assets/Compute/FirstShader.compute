@@ -358,9 +358,9 @@ void testing(uint3 id : SV_DispatchThreadID)
             float3 vertexB3 = startCoord + coords[verticesFromEdgeB[edge3]];
 
             Triangle tri;
-            tri.vertexA = interpolate(vertexA1, vertexB1);
-            tri.vertexB = interpolate(vertexA2, vertexB2);
-            tri.vertexC = interpolate(vertexA3, vertexB3);
+            tri.vertexA = interpolate(vertexA1, vertexB1) - 20;
+            tri.vertexB = interpolate(vertexA2, vertexB2) - 20;
+            tri.vertexC = interpolate(vertexA3, vertexB3) - 20;
             triangles.Append(tri);
 
         }
