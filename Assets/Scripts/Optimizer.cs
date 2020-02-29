@@ -12,6 +12,6 @@ public class Optimizer
 
     public static float getDeltaTime()
     {
-        return Time.realtimeSinceStartup - startTimeSeconds;
+        return 1000 * (Time.realtimeSinceStartup - startTimeSeconds);
     }
 }

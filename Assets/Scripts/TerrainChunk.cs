@@ -9,12 +9,11 @@ public class TerrainChunk
     TerrainShape shape;
     Vector3Int size;
     Vector3 offset;
-    Vector3 lastOffset;
-    Vector3 staticOffset;
     GameObject chunkObject;
     RunShader generator;
     Player player;
-    Vector3Int lastPlayerPos;
+
+    public Queue<Vector3> targetPositions { get; set; }
 
     public TerrainChunk(Vector3Int size, Vector3 offset, TerrainShape shape, RunShader generator)
     {
@@ -22,10 +21,9 @@ public class TerrainChunk
         this.generator = generator;
         this.shape = shape;
         this.offset = offset;
-        staticOffset = offset;
 
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-
+        targetPositions = new Queue<Vector3>();
         genDensities();
         chunkObject = new GameObject();
         chunkObject.AddComponent<MeshFilter>();
@@ -50,6 +48,7 @@ public class TerrainChunk
                 }
             }
         }
+        
     }
 
     public void computeMesh()
@@ -83,51 +82,101 @@ public class TerrainChunk
 
     public void update()
     {
-        if (Input.GetKey(KeyCode.T))
+        while(targetPositions.Count > 0)
         {
-            offset += new Vector3(40, 0, 0);
+            Vector3 targetPosition = targetPositions.Dequeue();
+            offset += targetPosition * 19;
+            chunkObject.transform.position += targetPosition * 19;
+
+        }
+        genDensities();
+        computeMesh();
+        /*
+        Vector3Int deltaChunk = player.getChunkPosition() - getChunkFromPos(chunkObject.transform.position);
+        bool updated = false;
+        if (Mathf.Abs(deltaChunk.x) == 3)
+        {
+            if (deltaChunk.x < 0) deltaChunk.x -= 2; else deltaChunk.x += 2;
+            float chunkOff = (deltaChunk.x) * 19;
+            offset += new Vector3(chunkOff, 0, 0);
             genDensities();
             computeMesh();
+            chunkObject.transform.Translate(new Vector3(chunkOff, 0, 0));
+            updated = true;
         }
-        
-        if(player.changedChunks())
+        if (Mathf.Abs(deltaChunk.y) == 3)
         {
-            Vector3Int deltaChunk = player.getChunkPosition() - getChunkFromPos(chunkObject.transform.position);
-            if (Mathf.Abs(deltaChunk.x) >= 3)
+            if (deltaChunk.y < 0) deltaChunk.y -= 2; else deltaChunk.y += 2;
+            float chunkOff = (deltaChunk.y) * 19;
+            offset += new Vector3(0, chunkOff, 0);
+            genDensities();
+            computeMesh();
+            chunkObject.transform.Translate(new Vector3(0, chunkOff, 0));
+            updated = true;
+        }
+        if (Mathf.Abs(deltaChunk.z) == 3)
+        {
+            if (deltaChunk.z < 0) deltaChunk.z -= 2; else deltaChunk.z += 2;
+            float chunkOff = (deltaChunk.z) * 19;
+            offset += new Vector3(0, 0, chunkOff);
+            genDensities();
+            computeMesh();
+            chunkObject.transform.Translate(new Vector3(0, 0, chunkOff));
+            updated = true;
+        }
+        return updated;
+        */
+    }
+
+
+    public void deform(Vector3 deformCenter, float radius)
+    {
+        int startX = (int)(deformCenter.x - radius);
+        int startY = (int)(deformCenter.y - radius);
+        int startZ = (int)(deformCenter.z - radius);
+
+        int endX = (int)(deformCenter.x + radius);
+        int endY = (int)(deformCenter.y + radius);
+        int endZ = (int)(deformCenter.z + radius);
+
+        for (int x = startX; x < endX; x ++)
+        {
+            for(int y = startY; y < endY; y ++)
             {
-                if (deltaChunk.x < 0) deltaChunk.x -= 2; else deltaChunk.x += 2;
-                float chunkOff = (deltaChunk.x) * 39;
-                offset += new Vector3(chunkOff, 0, 0);
-                genDensities();
-                computeMesh();
-                chunkObject.transform.Translate(new Vector3(chunkOff, 0, 0));
-            }
-            if (Mathf.Abs(deltaChunk.y) >= 3)
-            {
-                if (deltaChunk.y < 0) deltaChunk.y -= 2; else deltaChunk.y += 2;
-                float chunkOff = (deltaChunk.y) * 39;
-                offset += new Vector3(0, chunkOff, 0);
-                genDensities();
-                computeMesh();
-                chunkObject.transform.Translate(new Vector3(0, chunkOff, 0));
-            }
-            if (Mathf.Abs(deltaChunk.z) >= 3)
-            {
-                if (deltaChunk.z < 0) deltaChunk.z -= 2; else deltaChunk.z += 2;
-                float chunkOff = (deltaChunk.z) * 39;
-                offset += new Vector3(0, 0, chunkOff);
-                genDensities();
-                computeMesh();
-                chunkObject.transform.Translate(new Vector3(0, 0, chunkOff));
+                for(int z = startZ; z < endZ; z ++)
+                {
+                    Vector3 relativeToChunk = (new Vector3(x, y, z) - chunkObject.transform.position);
+                    relativeToChunk += new Vector3(10f, 10f, 10f);
+                    if (relativeToChunk.x < 20 && relativeToChunk.x >= 0 && relativeToChunk.y < 20 && relativeToChunk.y >= 0 && relativeToChunk.z < 20 && relativeToChunk.z >= 0)
+                    {
+                        float dist = Mathf.Abs((new Vector3(x, y, z) - deformCenter).magnitude);
+                        if (dist < 5)
+                        {
+                            int index = (int)relativeToChunk.x * 20 * 20 + (int)relativeToChunk.y * 20 + (int)relativeToChunk.z;
+                            densities[index] -= dist - 5;
+                        }
+                    }
+                }
             }
         }
+
+        computeMesh();
+    }
+
+    public Vector3 CalculateChunkPos()
+    {
+        Vector3 chunkPos = getChunkFromPos(chunkObject.transform.position);
+        foreach(Vector3 off in targetPositions)
+        {
+            chunkPos += off;
+        }
+        return chunkPos;
     }
 
     public static Vector3Int getChunkFromPos(Vector3 position)
     {
         Vector3 rawPos = new Vector3(position.x, position.y, position.z);
-        rawPos.Scale(new Vector3(1 / 39f, 1 / 39f, 1 / 39f));
-        Vector3Int chunkPos = signedTranslateToInt(rawPos, 0.5f);
+        Vector3Int chunkPos = signedTranslateToInt(rawPos / 19f, 0.5f);
         return chunkPos;
     }
 

@@ -51,6 +51,10 @@ public class RunShader
             outVerts[i*3 + 2] = triangles[i].pointC;
         }
 
+        trianglesBuffer.Dispose();
+        triCountBuffer.Dispose();
+        densitiesBuffer.Dispose();
+
         return outVerts;
     }
 

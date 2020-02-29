@@ -307,7 +307,7 @@ static const int verticesFromEdgeB[12] = {
 static const float3 coords[8] = { float3(0, 0, 1), float3(1, 0, 1), float3(1, 0, 0), float3(0, 0, 0), float3(0, 1, 1), float3(1, 1, 1), float3(1, 1, 0), float3(0, 1, 0) };
 
 int toIndex(int3 coord) {
-    return coord.x * 40 * 40 + coord.y * 40 + coord.z;
+    return coord.x * 20 * 20 + coord.y * 20 + coord.z;
 }
 
 float getIntDensity(int index) {
@@ -334,7 +334,7 @@ float3 interpolate(float3 a, float3 b) {
 void testing(uint3 id : SV_DispatchThreadID)
  {
     float3 startCoord = id;
-    if (startCoord.x < 39 && startCoord.y < 39 && startCoord.z < 39) {
+    if (startCoord.x < 19 && startCoord.y < 19 && startCoord.z < 19) {
         int index = 0;
 
         for (int ii = 0; ii < 8; ii++) {
@@ -358,9 +358,9 @@ void testing(uint3 id : SV_DispatchThreadID)
             float3 vertexB3 = startCoord + coords[verticesFromEdgeB[edge3]];
 
             Triangle tri;
-            tri.vertexA = interpolate(vertexA1, vertexB1) - 20;
-            tri.vertexB = interpolate(vertexA2, vertexB2) - 20;
-            tri.vertexC = interpolate(vertexA3, vertexB3) - 20;
+            tri.vertexA = interpolate(vertexA1, vertexB1) - 10;
+            tri.vertexB = interpolate(vertexA2, vertexB2) - 10;
+            tri.vertexC = interpolate(vertexA3, vertexB3) - 10;
             triangles.Append(tri);
 
         }

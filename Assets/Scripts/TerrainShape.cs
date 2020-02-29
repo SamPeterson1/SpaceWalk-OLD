@@ -9,10 +9,11 @@ public class TerrainShape
 
     public float getDensity(float x, float y, float z)
     {
-        Vector3 toCenter = new Vector3(x, y + 990, z);
+        Vector3 toCenter = new Vector3(x, y, z);
 
         
-        float dist = toCenter.magnitude;
-        return dist - 1000f + noise.Evaluate(toCenter/20f) * 2;
+        float dist = toCenter.magnitude + noise.Evaluate(toCenter / 10f) * 1.5f;
+      
+        return dist - 1000f;
     }
 }

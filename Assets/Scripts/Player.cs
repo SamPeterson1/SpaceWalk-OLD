@@ -9,9 +9,6 @@ public class Player : MonoBehaviour
 
     public float jumpForce;
 
-    float rotX = 0.0f;
-    float rotY = 0.0f;
-
     bool rising = false;
     bool falling = false;
     Vector3Int deltaChunk;
@@ -19,12 +16,17 @@ public class Player : MonoBehaviour
     Rigidbody body;
 
     Vector3Int chunkPos;
+
+    Transform camera;
+    Vector3 moveAmount;
+    Vector3 speedOnJump;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         body = GetComponent<Rigidbody>();
         chunkPos = new Vector3Int(0, 0, 0);
         deltaChunk = new Vector3Int(0, 0, 0);
+        camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Transform>();
     }
 
     // Update is called once per frame
@@ -36,29 +38,12 @@ public class Player : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
         }
 
-        if (Input.GetKey(KeyCode.W))
-        {
-            transform.Translate(new Vector3(0, 0, speed * Time.deltaTime));
-        }
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            transform.Translate(new Vector3(-speed * Time.deltaTime, 0, 0));
-        }
-
-        if (Input.GetKey(KeyCode.S))
-        {
-            transform.Translate(new Vector3(0, 0, -speed * Time.deltaTime));
-        }
-
-        if (Input.GetKey(KeyCode.D))
-        {
-            transform.Translate(new Vector3(speed * Time.deltaTime, 0, 0));
-        }
-
+        float jumpMultiplier = 1f;
+        if (rising || falling) jumpMultiplier = 0.5f;
+        moveAmount = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized * speed * jumpMultiplier;
         if (Input.GetKeyDown(KeyCode.Space) && !(rising || falling)) 
         {
-            body.AddForce(new Vector3(0, 500, 0));
+            jump();
             rising = true;
             falling = false;
         }
@@ -69,21 +54,32 @@ public class Player : MonoBehaviour
             falling = true;
         }
 
-        Vector2 mousePos = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-        rotX += -mousePos.y * sensitivity;
-        rotY += mousePos.x * sensitivity;
-        Vector3 rotation = new Vector3(rotX, rotY, 0);
-        transform.rotation = Quaternion.Euler(rotation);
-
-       
         Vector3Int pastChunk = new Vector3Int(chunkPos.x, chunkPos.y, chunkPos.z);
         chunkPos = TerrainChunk.getChunkFromPos(transform.position);
 
         deltaChunk = pastChunk - chunkPos;
-        
+
+        Vector2 mousePos = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+        float rotX = -mousePos.y * sensitivity;
+        float rotY = mousePos.x * sensitivity;
+
+        transform.Rotate(new Vector3(0, rotY, 0));
+        camera.transform.Rotate(new Vector3(rotX, 0, 0));
     }
 
-    
+    private void FixedUpdate()
+    {
+        Vector3 momentum = speedOnJump * 0.25f;
+        if (!(rising || falling)) momentum = new Vector3(0, 0, 0);
+        body.MovePosition(body.position + transform.TransformDirection(moveAmount + momentum) * Time.fixedDeltaTime);
+    }
+
+    private void jump()
+    {
+        speedOnJump = moveAmount;
+        Vector3 pointOnUnitSphere = transform.position.normalized;
+        body.AddForce(pointOnUnitSphere * jumpForce);
+    }
 
     public Vector3Int getDeltaChunk()
     {
@@ -99,10 +95,9 @@ public class Player : MonoBehaviour
     {
         return chunkPos;
     }
-    
+
     private void OnCollisionEnter(Collision collision)
     {
         falling = false;
     }
-
 }
