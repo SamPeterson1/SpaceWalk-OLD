@@ -17,22 +17,37 @@ public class Player : MonoBehaviour
 
     Vector3Int chunkPos;
 
-    Transform camera;
+    Camera camera;
     Vector3 moveAmount;
     Vector3 speedOnJump;
+
+    Vector3Int pastChunk;
+
+    TerrainGenerator generator;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         body = GetComponent<Rigidbody>();
         chunkPos = new Vector3Int(0, 0, 0);
         deltaChunk = new Vector3Int(0, 0, 0);
-        camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Transform>();
+        camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        generator = GameObject.FindGameObjectWithTag("Generator").GetComponent<TerrainGenerator>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
+        if (Input.GetKey(KeyCode.Q))
+        {
+            deform(1);
+        }
+
+        if (Input.GetKey(KeyCode.E))
+        {
+            deform(-1);
+        }
+
         if (Input.GetKey(KeyCode.Escape))
         {
             Cursor.lockState = CursorLockMode.None;
@@ -48,16 +63,11 @@ public class Player : MonoBehaviour
             falling = false;
         }
 
-        if(rising && body.velocity.y < 0)
+        if (rising && body.velocity.y < 0)
         {
             rising = false;
             falling = true;
         }
-
-        Vector3Int pastChunk = new Vector3Int(chunkPos.x, chunkPos.y, chunkPos.z);
-        chunkPos = TerrainChunk.getChunkFromPos(transform.position);
-
-        deltaChunk = pastChunk - chunkPos;
 
         Vector2 mousePos = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
         float rotX = -mousePos.y * sensitivity;
@@ -74,11 +84,34 @@ public class Player : MonoBehaviour
         body.MovePosition(body.position + transform.TransformDirection(moveAmount + momentum) * Time.fixedDeltaTime);
     }
 
+    private void deform(int subtract)
+    {
+        int layerMask = 1 << 0;
+
+        RaycastHit hit;
+        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+        if(Physics.Raycast(ray, out hit, 20, layerMask))
+        {
+            generator.deform(hit.point, 5, subtract);
+        } 
+    }
+
     private void jump()
     {
         speedOnJump = moveAmount;
         Vector3 pointOnUnitSphere = transform.position.normalized;
         body.AddForce(pointOnUnitSphere * jumpForce);
+    }
+
+    public void readChunkData()
+    {
+        chunkPos = TerrainChunk.getChunkFromPos(transform.position);
+        deltaChunk = pastChunk - chunkPos;
+    }
+
+    public void readPastChunk()
+    {
+        pastChunk = TerrainChunk.getChunkFromPos(transform.position);
     }
 
     public Vector3Int getDeltaChunk()

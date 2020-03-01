@@ -239,7 +239,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: 0, y: 1.8189893e-12, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -271,7 +271,7 @@ GameObject:
   - component: {fileID: 963194229}
   - component: {fileID: 963194230}
   - component: {fileID: 963194232}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -397,7 +397,7 @@ GameObject:
   - component: {fileID: 1307280301}
   - component: {fileID: 1307280302}
   - component: {fileID: 1307280296}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -509,7 +509,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!114 &1307280302
 MonoBehaviour:
@@ -537,7 +537,7 @@ GameObject:
   - component: {fileID: 1682199150}
   m_Layer: 0
   m_Name: MarchingCubes
-  m_TagString: Untagged
+  m_TagString: Generator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -555,6 +555,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   compute: {fileID: 7200000, guid: bbcd2c7d27f592c43a0845389212cff5, type: 3}
+  densities: {fileID: 7200000, guid: 0dfd05194f1f0c9449cf315c390b6aec, type: 3}
+  dist: 1
 --- !u!33 &1682199150
 MeshFilter:
   m_ObjectHideFlags: 0

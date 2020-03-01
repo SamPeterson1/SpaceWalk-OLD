@@ -1,2 +1,20 @@
 Base path: 'C:/Program Files/Unity/Hub/Editor/2019.3.2f1/Editor/Data', plugins path 'C:/Program Files/Unity/Hub/Editor/2019.3.2f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
+Cmd: preprocessCompute
+  insize=19185 outsize=19184 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=19184 outsize=67614 ok=1
+Cmd: preprocessCompute
+  insize=19312 outsize=19311 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at FirstShader.compute(324): invalid subscript 'w'
+  api=4 insize=19311 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=19311 outsize=19310 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at FirstShader.compute(356): undeclared identifier 'interpolate'
+  api=4 insize=19310 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=19306 outsize=19305 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=19305 outsize=68698 ok=1

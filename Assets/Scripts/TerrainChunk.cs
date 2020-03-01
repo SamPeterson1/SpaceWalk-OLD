@@ -7,48 +7,52 @@ public class TerrainChunk
 {
     float[] densities;
     TerrainShape shape;
-    Vector3Int size;
     Vector3 offset;
-    GameObject chunkObject;
+    public GameObject chunkObject;
     RunShader generator;
-    Player player;
 
-    public Queue<Vector3> targetPositions { get; set; }
 
-    public TerrainChunk(Vector3Int size, Vector3 offset, TerrainShape shape, RunShader generator)
+    public Vector3 toPlayer;
+    public Bounds bounds;
+
+    public static int SIZE = 40;
+
+    public TerrainChunk(Vector3 offset, TerrainShape shape, RunShader generator)
     {
-        this.size = size;
+
         this.generator = generator;
         this.shape = shape;
         this.offset = offset;
-
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        targetPositions = new Queue<Vector3>();
+        bounds = new Bounds(offset, new Vector3(SIZE, SIZE, SIZE));
         genDensities();
         chunkObject = new GameObject();
         chunkObject.AddComponent<MeshFilter>();
         chunkObject.AddComponent<MeshRenderer>();
         chunkObject.AddComponent<MeshCollider>();
         chunkObject.GetComponent<MeshRenderer>().material = Resources.Load("Materials/Terrain", typeof(Material)) as Material;
-        computeMesh();
         chunkObject.transform.Translate(offset);
+        computeMesh();
     }
 
     private void genDensities()
     {
-        densities = new float[size.x * size.y * size.z];
+        
+        /*
+        densities = new float[SIZE * SIZE * SIZE];
         int index = 0;
-        for (int x = -size.x / 2; x < size.y / 2; x++)
+        for (int x = -SIZE / 2; x < SIZE / 2; x++)
         {
-            for (int y = -size.y / 2; y < size.y / 2; y++)
+            for (int y = -SIZE / 2; y < SIZE / 2; y++)
             {
-                for (int z = -size.z / 2; z < size.z / 2; z++)
+                for (int z = -SIZE / 2; z < SIZE / 2; z++)
                 {
                     densities[index++] = shape.getDensity(x + offset.x, y + offset.y, z + offset.z);
                 }
             }
         }
-        
+        */
+
+        densities = shape.getDensities(offset);
     }
 
     public void computeMesh()
@@ -82,54 +86,14 @@ public class TerrainChunk
 
     public void update()
     {
-        while(targetPositions.Count > 0)
-        {
-            Vector3 targetPosition = targetPositions.Dequeue();
-            offset += targetPosition * 19;
-            chunkObject.transform.position += targetPosition * 19;
-
-        }
+        offset = chunkObject.transform.position;
         genDensities();
         computeMesh();
-        /*
-        Vector3Int deltaChunk = player.getChunkPosition() - getChunkFromPos(chunkObject.transform.position);
-        bool updated = false;
-        if (Mathf.Abs(deltaChunk.x) == 3)
-        {
-            if (deltaChunk.x < 0) deltaChunk.x -= 2; else deltaChunk.x += 2;
-            float chunkOff = (deltaChunk.x) * 19;
-            offset += new Vector3(chunkOff, 0, 0);
-            genDensities();
-            computeMesh();
-            chunkObject.transform.Translate(new Vector3(chunkOff, 0, 0));
-            updated = true;
-        }
-        if (Mathf.Abs(deltaChunk.y) == 3)
-        {
-            if (deltaChunk.y < 0) deltaChunk.y -= 2; else deltaChunk.y += 2;
-            float chunkOff = (deltaChunk.y) * 19;
-            offset += new Vector3(0, chunkOff, 0);
-            genDensities();
-            computeMesh();
-            chunkObject.transform.Translate(new Vector3(0, chunkOff, 0));
-            updated = true;
-        }
-        if (Mathf.Abs(deltaChunk.z) == 3)
-        {
-            if (deltaChunk.z < 0) deltaChunk.z -= 2; else deltaChunk.z += 2;
-            float chunkOff = (deltaChunk.z) * 19;
-            offset += new Vector3(0, 0, chunkOff);
-            genDensities();
-            computeMesh();
-            chunkObject.transform.Translate(new Vector3(0, 0, chunkOff));
-            updated = true;
-        }
-        return updated;
-        */
+        chunkObject.SetActive(true);
     }
 
 
-    public void deform(Vector3 deformCenter, float radius)
+    public void deform(Vector3 deformCenter, float radius, int subtract)
     {
         int startX = (int)(deformCenter.x - radius);
         int startY = (int)(deformCenter.y - radius);
@@ -139,6 +103,8 @@ public class TerrainChunk
         int endY = (int)(deformCenter.y + radius);
         int endZ = (int)(deformCenter.z + radius);
 
+        bool updated = false;
+
         for (int x = startX; x < endX; x ++)
         {
             for(int y = startY; y < endY; y ++)
@@ -146,37 +112,37 @@ public class TerrainChunk
                 for(int z = startZ; z < endZ; z ++)
                 {
                     Vector3 relativeToChunk = (new Vector3(x, y, z) - chunkObject.transform.position);
-                    relativeToChunk += new Vector3(10f, 10f, 10f);
-                    if (relativeToChunk.x < 20 && relativeToChunk.x >= 0 && relativeToChunk.y < 20 && relativeToChunk.y >= 0 && relativeToChunk.z < 20 && relativeToChunk.z >= 0)
+                    relativeToChunk += new Vector3(20, 20, 20);
+                    if (relativeToChunk.x < 40 && relativeToChunk.x >= 0 && relativeToChunk.y < 40 && relativeToChunk.y >= 0 && relativeToChunk.z < 40 && relativeToChunk.z >= 0)
                     {
                         float dist = Mathf.Abs((new Vector3(x, y, z) - deformCenter).magnitude);
                         if (dist < 5)
                         {
-                            int index = (int)relativeToChunk.x * 20 * 20 + (int)relativeToChunk.y * 20 + (int)relativeToChunk.z;
-                            densities[index] -= dist - 5;
+                            int index = (int)relativeToChunk.x * 40 * 40 + (int)relativeToChunk.y * 40 + (int)relativeToChunk.z;
+                            densities[index] -= (dist - 5) * 0.1f * subtract;
+                            updated = true;
                         }
                     }
                 }
             }
         }
 
-        computeMesh();
+        if (updated)
+        {
+            computeMesh();
+        }
     }
 
     public Vector3 CalculateChunkPos()
     {
         Vector3 chunkPos = getChunkFromPos(chunkObject.transform.position);
-        foreach(Vector3 off in targetPositions)
-        {
-            chunkPos += off;
-        }
         return chunkPos;
     }
 
     public static Vector3Int getChunkFromPos(Vector3 position)
     {
         Vector3 rawPos = new Vector3(position.x, position.y, position.z);
-        Vector3Int chunkPos = signedTranslateToInt(rawPos / 19f, 0.5f);
+        Vector3Int chunkPos = signedTranslateToInt(rawPos / 39f, 0.5f);
         return chunkPos;
     }
 

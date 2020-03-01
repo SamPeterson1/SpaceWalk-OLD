@@ -12,7 +12,6 @@ struct Triangle {
 
 RWStructuredBuffer<float> densities;
 AppendStructuredBuffer<Triangle> triangles;
-AppendStructuredBuffer<float> vertsA;
 
 static const int triangulation[256][16] = {
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
@@ -307,7 +306,7 @@ static const int verticesFromEdgeB[12] = {
 static const float3 coords[8] = { float3(0, 0, 1), float3(1, 0, 1), float3(1, 0, 0), float3(0, 0, 0), float3(0, 1, 1), float3(1, 1, 1), float3(1, 1, 0), float3(0, 1, 0) };
 
 int toIndex(int3 coord) {
-    return coord.x * 20 * 20 + coord.y * 20 + coord.z;
+    return coord.x * 40 * 40 + coord.y * 40 + coord.z;
 }
 
 float getIntDensity(int index) {
@@ -318,23 +317,19 @@ float getDensity(int3 coord) {
     return densities[toIndex(coord)];
 }
 
-float3 interpolate(float3 a, float3 b) {
-    
-    float weight1 = getDensity(a);
-    float weight2 = getDensity(b);
 
-    float range = abs(weight1) + abs(weight2);
-    weight1 = abs(weight1) / range;
-    weight2 = abs(weight2) / range;
-    
-    return a*weight2 + b*weight1;
+float3 interpolate(float3 v1, float3 v2) {
+    float v1w = getDensity(v1);
+    float v2w = getDensity(v2);
+    float t = (0 - v1w) / (v2w - v1w);
+    return v1.xyz + t * (v2.xyz - v1.xyz);
 }
 
 [numthreads(8,8,8)]
 void testing(uint3 id : SV_DispatchThreadID)
  {
     float3 startCoord = id;
-    if (startCoord.x < 19 && startCoord.y < 19 && startCoord.z < 19) {
+    if (startCoord.x < 39 && startCoord.y < 39 && startCoord.z < 39) {
         int index = 0;
 
         for (int ii = 0; ii < 8; ii++) {
@@ -358,9 +353,9 @@ void testing(uint3 id : SV_DispatchThreadID)
             float3 vertexB3 = startCoord + coords[verticesFromEdgeB[edge3]];
 
             Triangle tri;
-            tri.vertexA = interpolate(vertexA1, vertexB1) - 10;
-            tri.vertexB = interpolate(vertexA2, vertexB2) - 10;
-            tri.vertexC = interpolate(vertexA3, vertexB3) - 10;
+            tri.vertexA = interpolate(vertexA1, vertexB1) - 20;
+            tri.vertexB = interpolate(vertexA2, vertexB2) - 20;
+            tri.vertexC = interpolate(vertexA3, vertexB3) - 20;
             triangles.Append(tri);
 
         }

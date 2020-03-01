@@ -6,6 +6,7 @@ TagManager:
   tags:
   - PlanetCenter
   - Planet
+  - Generator
   layers:
   - Default
   - TransparentFX

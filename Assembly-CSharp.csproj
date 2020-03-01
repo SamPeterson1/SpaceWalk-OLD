@@ -80,7 +80,9 @@
     <None Include="Assets\Compute\March.compute" />
     <None Include="Assets\Compute\Grid.compute" />
     <None Include="Assets\Compute\FirstShader.compute" />
+    <None Include="Assets\Compute\Densities.compute" />
     <None Include="Assets\Compute\Includes\MarchTables.compute" />
+    <None Include="Assets\Compute\Includes\Noise.compute" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>C:/Users/Sam/SpaceWalk/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
