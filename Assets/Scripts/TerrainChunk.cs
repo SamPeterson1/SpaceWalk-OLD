@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class TerrainChunk
 {
@@ -10,31 +11,57 @@ public class TerrainChunk
     Vector3 offset;
     public GameObject chunkObject;
     RunShader generator;
-
+    ColorGenerator colorGenerator;
 
     public Vector3 toPlayer;
     public Bounds bounds;
 
     public static int SIZE = 40;
 
-    public TerrainChunk(Vector3 offset, TerrainShape shape, RunShader generator)
+    private BinaryWriter file;
+    private static Dictionary<Vector3, TerrainDeformation> pastData = new Dictionary<Vector3, TerrainDeformation>();
+    public static GameObject chunkPrefab;
+    private TerrainDeformation currentDeform;
+
+    public TerrainChunk(Vector3 offset, TerrainShape shape, RunShader generator, BinaryWriter writer, TerrainGenerator terrainGenerator)
     {
 
+        colorGenerator = terrainGenerator.colorGen;
         this.generator = generator;
         this.shape = shape;
         this.offset = offset;
         bounds = new Bounds(offset, new Vector3(SIZE, SIZE, SIZE));
         genDensities();
-        chunkObject = new GameObject();
-        chunkObject.AddComponent<MeshFilter>();
-        chunkObject.AddComponent<MeshRenderer>();
-        chunkObject.AddComponent<MeshCollider>();
-        chunkObject.GetComponent<MeshRenderer>().material = Resources.Load("Materials/Terrain", typeof(Material)) as Material;
-        chunkObject.transform.Translate(offset);
+
+        file = writer;
+
+        chunkObject = GameObject.Instantiate(chunkPrefab, offset, Quaternion.identity);
         computeMesh();
     }
 
-    private void genDensities()
+    public void updateFromSaveData(Player player)
+    {
+        Vector3 chunkPos = CalculateChunkPos();
+        Vector3 displacement = chunkPos - player.getChunkPosition();
+
+        if (Mathf.Abs(displacement.x) >= 2 || Mathf.Abs(displacement.y) >= 2 || Mathf.Abs(displacement.z) >= 2)
+        {
+            genDensities();
+            computeMesh();
+        }
+    }
+
+    public static void loadSaveData()
+    {
+        pastData = ChunkIO.LoadData();
+    }
+
+    public static void SaveData()
+    {
+        ChunkIO.WriteData(pastData);
+    }
+
+    public void genDensities()
     {
         
         /*
@@ -50,19 +77,49 @@ public class TerrainChunk
                 }
             }
         }
-        */
+        */    
 
         densities = shape.getDensities(offset);
+        if (pastData.ContainsKey(offset))
+        {
+            pastData.TryGetValue(offset, out currentDeform);
+            if(currentDeform != null)
+            {
+                densities = currentDeform.modify(densities);
+            }
+        } else
+        {
+            currentDeform = new TerrainDeformation();
+        }
+
+        
+    }
+
+    private Color ColorFromVec3(Vector3 color)
+    {
+        return new Color(color.x, color.y, color.z);
     }
 
     public void computeMesh()
     {
         
-        Vector3[] triangles = generator.run(densities);
-        genMesh(triangles);
+        RunShader.Triangle[] triangles = generator.run(densities, chunkObject.transform.position);
+        Vector3[] verts = new Vector3[triangles.Length*3];
+        Color[] colors = new Color[triangles.Length*3];
+        for(int i = 0; i < triangles.Length; i ++)
+        {
+            verts[i * 3] = triangles[i].pointA;
+            verts[i * 3 + 1] = triangles[i].pointB;
+            verts[i * 3 + 2] = triangles[i].pointC;
+            Color color = ColorFromVec3(triangles[i].color);
+            colors[i * 3] = color;
+            colors[i * 3 + 1] = color;
+            colors[i * 3 + 2] = color;
+        }
+        genMesh(verts, colors);
     }
 
-    private void genMesh(Vector3[] vertices)
+    private void genMesh(Vector3[] vertices, Color[] colors)
     {
         int[] indices = new int[vertices.Length];
         for(int i = 0; i < indices.Length; i ++)
@@ -76,6 +133,8 @@ public class TerrainChunk
         mesh.triangles = indices;
 
         mesh.RecalculateNormals();
+        
+        mesh.colors = colors;
         chunkObject.GetComponent<MeshCollider>().sharedMesh = mesh;
     }
 
@@ -92,6 +151,18 @@ public class TerrainChunk
         chunkObject.SetActive(true);
     }
 
+    public void Save()
+    {
+        if (currentDeform.Modified())
+        {
+            if (pastData.ContainsKey(offset))
+            {
+                pastData.Remove(offset);
+            }
+
+            pastData.Add(offset, currentDeform);
+        }
+    }
 
     public void deform(Vector3 deformCenter, float radius, int subtract)
     {
@@ -120,6 +191,7 @@ public class TerrainChunk
                         {
                             int index = (int)relativeToChunk.x * 40 * 40 + (int)relativeToChunk.y * 40 + (int)relativeToChunk.z;
                             densities[index] -= (dist - 5) * 0.1f * subtract;
+                            currentDeform.LogDensity(index, densities[index]);
                             updated = true;
                         }
                     }

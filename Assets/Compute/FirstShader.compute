@@ -8,8 +8,10 @@ struct Triangle {
     float3 vertexA;
     float3 vertexB;
     float3 vertexC;
+    float3 color;
 };
 
+float3 offset;
 RWStructuredBuffer<float> densities;
 AppendStructuredBuffer<Triangle> triangles;
 
@@ -356,7 +358,17 @@ void testing(uint3 id : SV_DispatchThreadID)
             tri.vertexA = interpolate(vertexA1, vertexB1) - 20;
             tri.vertexB = interpolate(vertexA2, vertexB2) - 20;
             tri.vertexC = interpolate(vertexA3, vertexB3) - 20;
+            float3 avgVal = (tri.vertexA + tri.vertexB + tri.vertexC) / 3.0f;
+            
+            if (abs(length(avgVal + offset)) - 1000.0f > 8.31f + 13.0f) {
+                tri.color = float3(0.7, 0.7, 0.7);
+            }
+            else {          
+                tri.color = float3(190, 48, 0) / 256.0f;
+            }
+            
             triangles.Append(tri);
+
 
         }
     }

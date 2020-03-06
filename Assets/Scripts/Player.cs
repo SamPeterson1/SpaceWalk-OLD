@@ -23,6 +23,7 @@ public class Player : MonoBehaviour
 
     Vector3Int pastChunk;
 
+    public GameObject teapot;
     TerrainGenerator generator;
     void Start()
     {
@@ -37,6 +38,11 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        if(Input.GetKeyDown(KeyCode.Y))
+        {
+            GameObject.Instantiate(teapot, transform.position + -2*camera.transform.forward, Quaternion.identity);
+        }
 
         if (Input.GetKey(KeyCode.Q))
         {
