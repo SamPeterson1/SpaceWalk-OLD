@@ -7,6 +7,7 @@ using System.IO;
 public class TerrainChunk
 {
     float[] densities;
+    Vector3[] colors;
     TerrainShape shape;
     Vector3 offset;
     public GameObject chunkObject;
@@ -79,7 +80,7 @@ public class TerrainChunk
         }
         */    
 
-        densities = shape.getDensities(offset);
+        shape.getDensities(offset, out densities, out colors);
         if (pastData.ContainsKey(offset))
         {
             pastData.TryGetValue(offset, out currentDeform);
@@ -103,7 +104,7 @@ public class TerrainChunk
     public void computeMesh()
     {
         
-        RunShader.Triangle[] triangles = generator.run(densities, chunkObject.transform.position);
+        RunShader.Triangle[] triangles = generator.run(densities, this.colors, chunkObject.transform.position);
         Vector3[] verts = new Vector3[triangles.Length*3];
         Color[] colors = new Color[triangles.Length*3];
         for(int i = 0; i < triangles.Length; i ++)

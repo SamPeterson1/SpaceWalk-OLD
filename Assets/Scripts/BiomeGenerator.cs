@@ -16,12 +16,15 @@ public class BiomeGenerator
         for(int i = 0; i < 600; i ++)
         {
             BiomePoint biome;
-            if (i % 2 == 0)
+            if (i % 3 == 0)
             {
                 biome.biome = (int)Biome.MOUNTAINS;
-            } else
+            } else if(i % 3 == 1)
             {
                 biome.biome = (int)Biome.PLAINS;
+            } else
+            {
+                biome.biome = (int)Biome.ROCKY_HILLS;
             }
 
             float x = Random.Range(-1f, 1f);

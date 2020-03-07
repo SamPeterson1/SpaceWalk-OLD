@@ -12,18 +12,23 @@ public class TerrainShape
     public BiomeGenerator biomeGenerator = new BiomeGenerator();
     BiomeGenerator.BiomePoint[] biomePoints;
 
+    public struct DensityPoint
+    {
+        public float density;
+        public Vector3 color;
+    }
+
     public TerrainShape()
     {
         biomePoints = biomeGenerator.GenerateBiomes();
     }
 
-    public float[] getDensities(Vector3 offset)
+    public void getDensities(Vector3 offset, out float[] densities, out Vector3[] colors)
     {
         int kernelHandle = shader.FindKernel("CSMain");
 
-        ComputeBuffer densitiesBuffer = new ComputeBuffer(40 * 40 * 40, sizeof(float));
+        ComputeBuffer densitiesBuffer = new ComputeBuffer(40 * 40 * 40, sizeof(float) * 4);
 
-        
         ComputeBuffer biomesBuffer = new ComputeBuffer(biomePoints.Length, sizeof(float) * 3 + sizeof(int));
         biomesBuffer.SetData(biomePoints);
 
@@ -33,14 +38,22 @@ public class TerrainShape
         shader.SetFloat("xOff", offset.x);
         shader.SetFloat("yOff", offset.y);
         shader.SetFloat("zOff", offset.z);
+
         loadSettingsToGPU();
         shader.Dispatch(kernelHandle, 5, 5, 5);
 
-        float[] densities = new float[40 * 40 * 40];
-        densitiesBuffer.GetData(densities);
+        DensityPoint[] densityPoints = new DensityPoint[40 * 40 * 40];
+        densitiesBuffer.GetData(densityPoints);
         densitiesBuffer.Dispose();
 
-        return densities;
+        densities = new float[40 * 40 * 40];
+        colors = new Vector3[40 * 40 * 40];
+
+        for(int i = 0; i < densityPoints.Length; i ++)
+        {
+            densities[i] = densityPoints[i].density;
+            colors[i] = densityPoints[i].color;
+        }
     }
 
     private void loadSettingsToGPU()

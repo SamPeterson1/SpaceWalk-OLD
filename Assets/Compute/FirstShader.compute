@@ -13,6 +13,7 @@ struct Triangle {
 
 float3 offset;
 RWStructuredBuffer<float> densities;
+RWStructuredBuffer<float3> colors;
 AppendStructuredBuffer<Triangle> triangles;
 
 static const int triangulation[256][16] = {
@@ -311,6 +312,15 @@ int toIndex(int3 coord) {
     return coord.x * 40 * 40 + coord.y * 40 + coord.z;
 }
 
+float3 getColor(int index) {
+    int colorIndex = toIndex(index) * 3;
+    float r = colors[colorIndex];
+    float g = colors[colorIndex + 1];
+    float b = colors[colorIndex + 2];
+
+    return float3(r, g, b);
+}
+
 float getIntDensity(int index) {
     return densities[index];
 }
@@ -342,30 +352,30 @@ void testing(uint3 id : SV_DispatchThreadID)
 
         for (int iii = 0; triangulation[index][iii] != -1; iii += 3) {
 
+            float3 avgColor = float3(0, 0, 0);
             int edge1 = triangulation[index][iii];
             float3 vertexA1 = startCoord + coords[verticesFromEdgeA[edge1]];
+            avgColor += colors[toIndex(vertexA1)];
             float3 vertexB1 = startCoord + coords[verticesFromEdgeB[edge1]];
+            avgColor += colors[toIndex(vertexB1)];
 
             int edge2 = triangulation[index][iii + 1];
             float3 vertexA2 = startCoord + coords[verticesFromEdgeA[edge2]];
+            avgColor += colors[toIndex(vertexB1)];
             float3 vertexB2 = startCoord + coords[verticesFromEdgeB[edge2]];
+            avgColor += colors[toIndex(vertexB2)];
 
             int edge3 = triangulation[index][iii + 2];
             float3 vertexA3 = startCoord + coords[verticesFromEdgeA[edge3]];
+            avgColor += colors[toIndex(vertexA3)];
             float3 vertexB3 = startCoord + coords[verticesFromEdgeB[edge3]];
+            avgColor += colors[toIndex(vertexB3)];
 
             Triangle tri;
             tri.vertexA = interpolate(vertexA1, vertexB1) - 20;
             tri.vertexB = interpolate(vertexA2, vertexB2) - 20;
             tri.vertexC = interpolate(vertexA3, vertexB3) - 20;
-            float3 avgVal = (tri.vertexA + tri.vertexB + tri.vertexC) / 3.0f;
-            
-            if (abs(length(avgVal + offset)) - 1000.0f > 8.31f + 13.0f) {
-                tri.color = float3(0.7, 0.7, 0.7);
-            }
-            else {          
-                tri.color = float3(190, 48, 0) / 256.0f;
-            }
+            tri.color = avgColor / 6.0f;
             
             triangles.Append(tri);
 

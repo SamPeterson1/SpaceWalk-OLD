@@ -10,8 +10,13 @@ struct BiomePoint {
     float3 pos;
 };
 
+struct DensityPoint {
+    float density;
+    float3 color;
+};
+
 RWStructuredBuffer<BiomePoint> biomes;
-RWStructuredBuffer<float> densities;
+RWStructuredBuffer<DensityPoint> densities;
 float xOff;
 float yOff;
 float zOff;
@@ -103,6 +108,9 @@ int closestBiome(float3 pos) {
 [numthreads(8,8,8)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
+
+    
+
     float3 toCenter = id + float3(xOff, yOff, zOff) - float3(20, 20, 20);
     float totalAmplitude = amplitude;
     float totalRoughness = baseRoughness;
@@ -120,6 +128,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     
     float biomeBVal = dist - totalNoise - 13.0f;
     float biomeAVal = dist - (totalNoise - 1000.0f) / 5.0f - 1000.0f;
+    float biomeCVal = dist - 1000.0f;
     float diff = abs(biomeAVal - biomeBVal);
 
     /*
@@ -134,6 +143,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     float3 closestBiomePoint = closestPoint(toCenter);
     float biomeADist = getBiomeDist(closestBiomePoint, toCenter, diff, 0);
     float biomeBDist = getBiomeDist(closestBiomePoint, toCenter, diff, 1);
+    float biomeCDist = getBiomeDist(closestBiomePoint, toCenter, diff, 2);
 
     /*
     float biomeAFactor = min(1, max(0, (biomeADist +  diff * 3.0f) / (6.0f * diff)));
@@ -146,6 +156,8 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     biomeAFactor *= biomeAFactor * biomeAFactor;
     float biomeBFactor = biomeBDist;
     biomeBFactor *= biomeBFactor * biomeBFactor;
+    float biomeCFactor = biomeCDist;
+    biomeCFactor *= biomeCFactor * biomeCFactor;
 
     /*
     //float biomeAVal = dist - 990.0f;
@@ -169,7 +181,10 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     */
 
-    densities[toIndex(id)] = biomeAVal * biomeAFactor + biomeBVal * biomeBFactor;
+    DensityPoint density;
+    density.density = biomeAVal * biomeAFactor + biomeBVal * biomeBFactor + biomeCVal * biomeCFactor;
+    density.color = float3(biomeAFactor, biomeBFactor, biomeCFactor);
+    densities[toIndex(id)] = density;
 
     /*
     if (totalNoise > minRadius + 1000.0f) {

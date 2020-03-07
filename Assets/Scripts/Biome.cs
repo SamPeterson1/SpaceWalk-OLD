@@ -4,5 +4,5 @@ using UnityEngine;
 
 public enum Biome
 {
-    MOUNTAINS, PLAINS
+    MOUNTAINS, PLAINS, ROCKY_HILLS
 }

@@ -20,7 +20,7 @@ public class RunShader
         this.shader = shader;
     }
 
-    public Triangle[] run(float[] densities, Vector3 offset)
+    public Triangle[] run(float[] densities, Vector3[] colors, Vector3 offset)
     {
 
         int kernelHandle = shader.FindKernel("testing");
@@ -30,8 +30,13 @@ public class RunShader
         ComputeBuffer trianglesBuffer = new ComputeBuffer(40 * 40 * 40 * 5, FLOAT_BYTES * 12, ComputeBufferType.Append);
         trianglesBuffer.SetCounterValue(0);
 
+        ComputeBuffer colorsBuffer = new ComputeBuffer(40 * 40 * 40, sizeof(float) * 3);
+        colorsBuffer.SetData(colors);
+
         shader.SetBuffer(kernelHandle, "densities", densitiesBuffer);
         shader.SetBuffer(kernelHandle, "triangles", trianglesBuffer);
+        shader.SetBuffer(kernelHandle, "colors", colorsBuffer);
+
         shader.SetFloats("offset", new float[] { offset.x, offset.y, offset.z });
         shader.Dispatch(kernelHandle, 5, 5, 5);
         ComputeBuffer triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
