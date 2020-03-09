@@ -9,8 +9,8 @@ public class TerrainShape
 
     public NoiseSettings settings;
     public ComputeShader shader;
-    public BiomeGenerator biomeGenerator = new BiomeGenerator();
-    BiomeGenerator.BiomePoint[] biomePoints;
+    public BiomeGenerator biomeGenerator;
+    public BiomeGenerator.BiomePoint[] biomePoints;
 
     public struct DensityPoint
     {
@@ -18,8 +18,9 @@ public class TerrainShape
         public Vector3 color;
     }
 
-    public TerrainShape()
+    public TerrainShape(List<Biome> biomes)
     {
+        biomeGenerator = new BiomeGenerator(biomes);
         biomePoints = biomeGenerator.GenerateBiomes();
     }
 
@@ -29,7 +30,7 @@ public class TerrainShape
 
         ComputeBuffer densitiesBuffer = new ComputeBuffer(40 * 40 * 40, sizeof(float) * 4);
 
-        ComputeBuffer biomesBuffer = new ComputeBuffer(biomePoints.Length, sizeof(float) * 3 + sizeof(int));
+        ComputeBuffer biomesBuffer = new ComputeBuffer(biomePoints.Length, sizeof(int) + sizeof(float) * 12);
         biomesBuffer.SetData(biomePoints);
 
         shader.SetBuffer(kernelHandle, "biomes", biomesBuffer);
@@ -42,6 +43,7 @@ public class TerrainShape
         loadSettingsToGPU();
         shader.Dispatch(kernelHandle, 5, 5, 5);
 
+        biomesBuffer.Dispose();
         DensityPoint[] densityPoints = new DensityPoint[40 * 40 * 40];
         densitiesBuffer.GetData(densityPoints);
         densitiesBuffer.Dispose();

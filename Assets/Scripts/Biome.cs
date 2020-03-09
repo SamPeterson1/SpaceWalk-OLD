@@ -2,7 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Biome
+[System.Serializable]
+public class Biome
 {
-    MOUNTAINS, PLAINS, ROCKY_HILLS
+
+    public BiomeType type;
+    public NoiseSettings settings;
+
+    public Biome(BiomeType type, NoiseSettings settings)
+    {
+        this.type = type;
+        this.settings = settings;
+    }
 }

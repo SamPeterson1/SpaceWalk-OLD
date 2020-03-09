@@ -52,6 +52,7 @@ public class RunShader
         trianglesBuffer.Dispose();
         triCountBuffer.Dispose();
         densitiesBuffer.Dispose();
+        colorsBuffer.Dispose();
 
         return triangles;
     }

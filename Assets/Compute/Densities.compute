@@ -7,6 +7,13 @@
 
 struct BiomePoint {
     int biome;
+    float roughness;
+    float amplitude;
+    float persistence;
+    float baseRoughness;
+    float numLayers;
+    float minRadius;
+    float3 center;
     float3 pos;
 };
 
@@ -88,6 +95,23 @@ float3 closestPoint(float3 pos) {
     return closest;
 }
 
+float GetNoise(BiomePoint biomePoint, float3 toCenter) {
+    
+    float totalAmplitude = biomePoint.amplitude;
+    float totalRoughness = biomePoint.baseRoughness;
+    float totalNoise = 1000.0f;
+    float3 pointOnUnitSphere = normalize(toCenter);
+
+    for (int i = 0; i < numLayers; i++) {
+
+        totalNoise += (snoise(pointOnUnitSphere * totalRoughness) + 0.5f) / 2.0f * totalAmplitude;
+        totalAmplitude *= biomePoint.persistence;
+        totalRoughness *= biomePoint.roughness;
+    }
+
+    return length(toCenter) - totalNoise;
+}
+
 int closestBiome(float3 pos) {
     float minDist = -1.0f;
     int closestBiome = 0;
@@ -109,9 +133,9 @@ int closestBiome(float3 pos) {
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
 
-    
-
     float3 toCenter = id + float3(xOff, yOff, zOff) - float3(20, 20, 20);
+    
+    /*
     float totalAmplitude = amplitude;
     float totalRoughness = baseRoughness;
     float totalNoise = 1000.0f;
@@ -123,14 +147,49 @@ void CSMain (uint3 id : SV_DispatchThreadID)
         totalAmplitude *= persistence;
         totalRoughness *= roughness;
     }
+    */
+    
+    float totalAmplitude = amplitude;
+    float totalRoughness = baseRoughness;
+    float totalNoise = 1000.0f;
+    float3 pointOnUnitSphere = normalize(toCenter);
+
+    for (int i = 0; i < numLayers; i++) {
+
+        totalNoise += (snoise(pointOnUnitSphere * totalRoughness) + 0.5f) / 2.0f * totalAmplitude;
+        totalAmplitude *= persistence;
+        totalRoughness *= roughness;
+    }
 
     float dist = sqrt(toCenter.x * toCenter.x + toCenter.y * toCenter.y + toCenter.z * toCenter.z);
-    
+    /*
     float biomeBVal = dist - totalNoise - 13.0f;
     float biomeAVal = dist - (totalNoise - 1000.0f) / 5.0f - 1000.0f;
     float biomeCVal = dist - 1000.0f;
     float diff = abs(biomeAVal - biomeBVal);
+    */
+    
+    float3 closestBiomePoint = closestPoint(toCenter);
 
+    float biomeADist = getBiomeDist(closestBiomePoint, toCenter, 30.0f, 0);
+    float biomeBDist = getBiomeDist(closestBiomePoint, toCenter, 30.0f, 1);
+    float biomeCDist = getBiomeDist(closestBiomePoint, toCenter, 30.0f, 2);
+
+    float biomeAVal = 0;
+    float biomeBVal = 0;
+    float biomeCVal = 0;
+
+    if (biomeADist != 0) {
+        biomeAVal = GetNoise(biomes[0], toCenter);
+    }
+    if (biomeBDist != 0) {
+        biomeBVal = GetNoise(biomes[1], toCenter);
+    }
+    if (biomeCDist != 0) {
+        biomeCVal = GetNoise(biomes[2], toCenter);
+    }
+    float diff = 30.0f;
+    
     /*
     float toA = float3(30, 1000, 0);
     float toB = float3(-30, 1000, 0);
@@ -140,10 +199,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     float biomeBDist = getBiomeBDist(toCenter, diff);
     */
 
-    float3 closestBiomePoint = closestPoint(toCenter);
-    float biomeADist = getBiomeDist(closestBiomePoint, toCenter, diff, 0);
-    float biomeBDist = getBiomeDist(closestBiomePoint, toCenter, diff, 1);
-    float biomeCDist = getBiomeDist(closestBiomePoint, toCenter, diff, 2);
+    
 
     /*
     float biomeAFactor = min(1, max(0, (biomeADist +  diff * 3.0f) / (6.0f * diff)));
@@ -183,7 +239,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     DensityPoint density;
     density.density = biomeAVal * biomeAFactor + biomeBVal * biomeBFactor + biomeCVal * biomeCFactor;
-    density.color = float3(biomeAFactor, biomeBFactor, biomeCFactor);
+    density.color = float3(1, 0, 0);
     densities[toIndex(id)] = density;
 
     /*

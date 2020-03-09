@@ -6,7 +6,7 @@ using UnityEngine;
 public class ChunkIO
 {
     public static string savePath = "/Save/chunkData.dat";
-    private static float chunkSeparator = float.MaxValue;
+    private static float packetSeparator = float.MaxValue;
 
     public static void CreateFile()
     {
@@ -16,9 +16,9 @@ public class ChunkIO
         }
     }
 
-    public static Dictionary<Vector3, TerrainDeformation> LoadData()
+    public static void LoadData(out Dictionary<Vector3, TerrainDeformation> deformations, out BiomeGenerator.BiomePoint[] biomePoints, Dictionary<BiomeType, Biome> biomes)
     {
-        Dictionary<Vector3, TerrainDeformation> deformations = new Dictionary<Vector3, TerrainDeformation>();
+        deformations = new Dictionary<Vector3, TerrainDeformation>();
         using (BinaryReader reader = new BinaryReader(File.Open(savePath, FileMode.Open)))
         {
             int numChunks = reader.ReadInt32();
@@ -34,7 +34,7 @@ public class ChunkIO
 
                 Dictionary<int, float> points = new Dictionary<int, float>();
 
-                while ((f = reader.ReadSingle()) != chunkSeparator)
+                while ((f = reader.ReadSingle()) != packetSeparator)
                 {
                     if (index == 0) x = f;
                     else if (index == 1) y = f;
@@ -58,11 +58,43 @@ public class ChunkIO
                 Vector3 offset = new Vector3(x, y, z);
                 deformations.Add(offset, new TerrainDeformation(points));
             }
+
+            int numBiomes = reader.ReadInt32();
+            biomePoints = new BiomeGenerator.BiomePoint[numBiomes];
+            for(int i = 0; i < numBiomes; i ++)
+            {
+                float x = reader.ReadSingle();
+                float y = reader.ReadSingle();
+                float z = reader.ReadSingle();
+                int biome = reader.ReadInt32();
+
+                BiomeGenerator.BiomePoint biomePoint;
+                biomePoint.pos = new Vector3(x, y, z);
+                biomePoint.biome = biome;
+
+                biomes.TryGetValue((BiomeType)biome, out Biome biomeData);
+
+                if (biomeData != null)
+                {
+                    biomePoint.biome = (int)biomeData.type;
+                    NoiseSettings settings = biomeData.settings;
+                    biomePoint.amplitude = settings.amplitude;
+                    biomePoint.baseRoughness = settings.baseRoughness;
+                    biomePoint.center = settings.center;
+                    biomePoint.minRadius = settings.minRadius;
+                    biomePoint.numLayers = settings.numLayers;
+                    biomePoint.persistence = settings.persistence;
+                    biomePoint.roughness = settings.roughness;
+                    biomePoints[i] = biomePoint;
+                } else
+                {
+                    Debug.LogError("Error loading data: biome not found");
+                }  
+            }
         }
-        return deformations;
     }
 
-    public static void WriteData(Dictionary<Vector3, TerrainDeformation> deformations)
+    public static void WriteData(Dictionary<Vector3, TerrainDeformation> deformations, BiomeGenerator.BiomePoint[] biomes)
     {
 
         using (BinaryWriter writer = new BinaryWriter(File.Open(savePath, FileMode.Append)))
@@ -84,8 +116,19 @@ public class ChunkIO
                     //make it a float to make reading the file easier
                     writer.Write((float)i);
                 }
-                writer.Write(chunkSeparator);
+                writer.Write(packetSeparator);
             }
+
+            writer.Write(biomes.Length);
+            foreach(BiomeGenerator.BiomePoint biome in biomes)
+            {
+                Vector3 position = biome.pos;
+                writer.Write(position.x);
+                writer.Write(position.y);
+                writer.Write(position.z);
+                writer.Write(biome.biome);
+            }
+
         }
     }
 

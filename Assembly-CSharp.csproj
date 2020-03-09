@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Biome.cs" />
     <Compile Include="Assets\Scripts\BiomeGenerator.cs" />
+    <Compile Include="Assets\Scripts\BiomeType.cs" />
     <Compile Include="Assets\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\ChunkIO.cs" />
     <Compile Include="Assets\Scripts\ColorGenerator.cs" />
@@ -85,9 +86,12 @@
     <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
     <Compile Include="Assets\Scripts\TerrainShape.cs" />
     <Compile Include="Assets\Scripts\Tether.cs" />
+    <Compile Include="Assets\Scripts\TetherConnection.cs" />
     <Compile Include="Assets\Scripts\Wireframe.cs" />
+    <None Include="Assets\Shaders\ConnectionShader.shader" />
     <None Include="Assets\Compute\March.compute" />
     <None Include="Assets\Compute\Grid.compute" />
+    <None Include="Assets\Compute\Includes\BiomeSettings.compute" />
     <None Include="Assets\Compute\FirstShader.compute" />
     <None Include="Assets\Compute\Densities.compute" />
     <None Include="Assets\Compute\Includes\MarchTables.compute" />

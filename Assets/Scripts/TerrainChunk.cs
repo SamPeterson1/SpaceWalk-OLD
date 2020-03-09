@@ -52,14 +52,15 @@ public class TerrainChunk
         }
     }
 
-    public static void loadSaveData()
+    public static BiomeGenerator.BiomePoint[] loadSaveData(BiomeGenerator biomeGenerator)
     {
-        pastData = ChunkIO.LoadData();
+        ChunkIO.LoadData(out pastData, out BiomeGenerator.BiomePoint[] biomes, biomeGenerator.biomes);
+        return biomes;
     }
 
-    public static void SaveData()
+    public static void SaveData(BiomeGenerator.BiomePoint[] points)
     {
-        ChunkIO.WriteData(pastData);
+        ChunkIO.WriteData(pastData, points);
     }
 
     public void genDensities()
