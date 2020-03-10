@@ -28,12 +28,14 @@ public class TerrainGenerator : MonoBehaviour
 
     public List<Biome> biomes;
     public NoiseSettings settings;
+    public TetherNetwork tetherNetwork;
 
     void Start()
     {
         ChunkIO.CreateFile();
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        tetherNetwork = GameObject.FindGameObjectWithTag("Planet").GetComponent<TetherNetwork>();
         TerrainChunk.chunkPrefab = chunkPrefab;
 
         float foo = Time.time;
@@ -60,9 +62,8 @@ public class TerrainGenerator : MonoBehaviour
         Debug.Log(Time.realtimeSinceStartup - foo + " TIME");
     }
 
-    public void deform(Vector3 pos, float radius, int subtract)
+    public void deform(Vector3 pos, float radius, float rate, bool subtract)
     {
-       // int i = 0;
         foreach (TerrainChunk chunk in chunks)
         {
             Vector3 chunkCenter = chunk.chunkObject.transform.position;
@@ -70,11 +71,9 @@ public class TerrainGenerator : MonoBehaviour
             
             if (toCenter.magnitude - radius < 40)
             {
-                //i++;
-                chunk.deform(pos, radius, subtract);
+                chunk.deform(pos, radius, rate, subtract);
             }
         }
-        //Debug.Log(i);
     }
 
     void genChunk(Vector3 offset)
@@ -111,125 +110,52 @@ public class TerrainGenerator : MonoBehaviour
                 chunk.computeMesh();
             }
         }
-        /*
-        player.readChunkData();
-        List<Vector3> remove = new List<Vector3>();
-        foreach (TerrainChunk chunk in active.Values)
-        {
-            Vector3 displacement = chunk.CalculateChunkPos() - player.getChunkPosition();
-            if (Mathf.Abs(displacement.x) >= dist+1 || Mathf.Abs(displacement.y) >= dist+1 || Mathf.Abs(displacement.z) >= dist+1)
-            {
-                Debug.Log("remocve"  + recyclable.Count);
-                remove.Add(chunk.chunkObject.transform.position);
-                chunk.chunkObject.transform.position = Vector3.zero;
-                chunk.chunkObject.SetActive(false);
-                recyclable.Enqueue(chunk);
-                Debug.Log("remocve" + recyclable.Count);
-            }
-        }
 
+        QueueChunks();
+        UpdateChunks();
         
+    }
 
-        for(int x = -dist; x <= dist; x ++)
-        {
-            for(int y = -dist; y <= dist; y ++)
-            {
-                for(int z = -dist; z <= dist; z ++)
-                {
-                    Vector3 center = (player.getChunkPosition() + new Vector3(x, y, z)) * (TerrainChunk.SIZE - 1);
-                    if (!active.ContainsKey(center))
-                    {
-                        if (recyclable.Count > 0)
-                        {
-                            Debug.Log("Recycle" + recyclable.Count);
-                            TerrainChunk chunk = recyclable.Dequeue();
-                            chunk.chunkObject.transform.position = center;
-                            needUpdate.Enqueue(chunk);
-                        }
-                        else
-                        {
-                            Debug.Log("No recycle");
-                            TerrainChunk chunk = new TerrainChunk(center, shape, shader);
-                            chunk.chunkObject.transform.position = center;
-                            active.Add(center, chunk);
-                            needUpdate.Enqueue(chunk);
-                        }
-                    }
-                }
-            }
-        }
-
-        foreach (Vector3 vec in remove)
-        {
-            active.Remove(vec);
-        }
-
+    void UpdateChunks()
+    {
         if (needUpdate.Count > 0)
         {
-            needUpdate.Dequeue().update();
+            TerrainChunk chunk = needUpdate.Dequeue();
+            chunk.Save(); /* Save current chunk data before ovewriting */
+            chunk.update();
+            tetherNetwork.LoadTethersInChunk(chunk.chunkObject.transform.position);
         }
-        */
+    }
 
+    void QueueChunks()
+    {
         player.readChunkData();
-        Vector3 deltaChunk = player.getDeltaChunk();
         player.readPastChunk();
         if (player.changedChunks())
         {
             foreach (TerrainChunk chunk in chunks)
             {
-
-                Vector3 chunkPos = chunk.CalculateChunkPos();
-                Vector3 displacement = chunkPos - player.getChunkPosition();
-                /*
-                if (Mathf.Abs(displacement.x) >= 3 || Mathf.Abs(displacement.y) >= 3 || Mathf.Abs(displacement.z) >= 3)
-                {
-                    Vector3 foo = deltaChunk * -1;
-                    if (foo.x != 0) foo.x += 4f * Mathf.Sign(foo.x);
-                    if (foo.y != 0) foo.y += 4f * Mathf.Sign(foo.y);
-                    if (foo.z != 0) foo.z += 4f * Mathf.Sign(foo.z);
-                    chunk.chunkObject.SetActive(false);
-                    chunk.chunkObject.transform.position = (chunkPos + foo) * 19;
-                    needUpdate.Enqueue(chunk);
-                }
-                 */
+                Vector3 displacement = chunk.CalculateChunkPos() - player.getChunkPosition();
                 if (Mathf.Abs(displacement.x) >= 3)
                 {
+                    tetherNetwork.UnloadTethersInChunk(chunk.chunkObject.transform.position);
                     chunk.chunkObject.transform.Translate(new Vector3(-5 * 39 * Mathf.Sign(displacement.x), 0, 0));
                     needUpdate.Enqueue(chunk);
                     chunk.chunkObject.SetActive(false);
-                } else if (Mathf.Abs(displacement.y) >= 3)
+                }
+                else if (Mathf.Abs(displacement.y) >= 3)
                 {
                     chunk.chunkObject.transform.Translate(new Vector3(0, -5 * 39 * Mathf.Sign(displacement.y), 0));
                     needUpdate.Enqueue(chunk);
                     chunk.chunkObject.SetActive(false);
-                } else if (Mathf.Abs(displacement.z) >= 3)
+                }
+                else if (Mathf.Abs(displacement.z) >= 3)
                 {
                     chunk.chunkObject.transform.Translate(new Vector3(0, 0, -5 * 39 * Mathf.Sign(displacement.z)));
                     needUpdate.Enqueue(chunk);
                     chunk.chunkObject.SetActive(false);
                 }
-
-
-
-
             }
         }
-
-        //Optimizer.begin();
-        //while (Optimizer.getDeltaTime() < 5)
-        //{
-            if (needUpdate.Count > 0)
-            {
-                TerrainChunk chunk = needUpdate.Dequeue();
-                chunk.Save();
-                chunk.update();
-            }
-            //{
-             //   break;
-            //}
-        //}
-        
-
     }
-
 }

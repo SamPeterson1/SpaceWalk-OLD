@@ -10,90 +10,31 @@ public class Tether : MonoBehaviour
     public static readonly float RANGE = 10f;
     public Tether supplier = null;
     public GameObject connectionPrefab;
-    public static List<Tether> disconnectedTethers;
-    public static List<Tether> connectedTethers;
-    public static List<Tether> tethers = new List<Tether>();
     private TetherConnection tetherConnection;
+    private TetherNetwork network;
     public bool hasOxygen = false;
     public bool isRoot = false;
     public bool firstTether = false;
 
     void Start()
     {
+        network = GameObject.FindGameObjectWithTag("Planet").GetComponent<TetherNetwork>();
         body = GetComponent<Rigidbody>();
         body.constraints = RigidbodyConstraints.FreezeRotation;
-        /*
-        foreach(TetherTree tree in tetherTrees.Values)
-        {
-            tree.AddToTree(this);
-        }
-        */
-        if(tethers == null)
-        {
-            Debug.Log("OOF");
-            tethers = new List<Tether>();
-        }
-        /*
-        if(connectedTethers == null)
-        {
-            connectedTethers = new List<Tether>();
-            disconnectedTethers = new List<Tether>();
-        }
-        */
-
         
-        if (isRoot || tethers.Count == 0)
+        if (isRoot || network.tethers.Count == 0)
         {
+            hasOxygen = true;
             firstTether = true;
             supplier = this;
         }
-        tethers.Add(this);
+        //TetherNetwork.AddTether(this);
     }
- 
 
-    /*
-    public Tether ClosestTetherNoRecursion()
+    private void OnDestroy()
     {
-        Tether closest = null;
-        float minDist = -1;
-        foreach (Tether tether in tethers)
-        {
-            if (tether != this && tether.inRange(transform))
-            {
-                float dist = (tether.transform.position - transform.position).magnitude;
-                if (minDist == -1 || dist < minDist)
-                {
-                    minDist = dist;
-                    closest = tether;
-                }
-            }
-        }
-
-        return closest;
+        
     }
-    */
-
-    /*
-    public Tether ClosestTether()
-    {
-        Tether closest = null;
-        float minDist = -1;
-        foreach (Tether tether in tethers)
-        {
-            if (tether != this && tether.inRange(transform) && tether.supplier != this)
-            {
-                float dist = (tether.transform.position - transform.position).magnitude;
-                if (minDist == -1 || dist < minDist)
-                {
-                    minDist = dist;
-                    closest = tether;
-                }
-            }
-        }
-
-        return closest;
-    }
-    */
 
     void updateHasOxygen()
     {
@@ -126,35 +67,8 @@ public class Tether : MonoBehaviour
         }
     }
 
-    /*
-    bool TryConnectDisconnected()
-    {
-        bool retVal = false;
-
-        Tether closest = FindClosestDisconnectedTether();
-        while(closest != null)
-        {
-            connectedTethers.Add(closest);
-            disconnectedTethers.Remove(closest);
-            GameObject newConnection = Instantiate(connectionPrefab);
-            TetherConnection connection = newConnection.GetComponent<TetherConnection>();
-            tetherConnection = connection;
-            connection.tetherA = gameObject;
-            connection.tetherB = closest.gameObject;
-            closest.supplier = this;
-            closest.TryConnectDisconnected();
-            retVal = true;
-            closest = FindClosestDisconnectedTether();
-        }
-        return retVal;
-    }
-    */
-    // Update is called once per frame
     void Update()
-    {
-        
-        
-        
+    { 
         RaycastHit hit;
         if (body.constraints == RigidbodyConstraints.FreezeAll && Physics.Raycast(transform.position, -transform.position, out hit, 1.2f))
         {
@@ -169,69 +83,28 @@ public class Tether : MonoBehaviour
         updateHasOxygen();
     }
 
-    /*
-    public Tether FindClosestDisconnectedTether()
-    {
-        Tether closest = null;
-        float minDist = -1;
-        foreach (Tether tether in disconnectedTethers)
-        {
-            if (tether != this && tether.inRange(transform))
-            {
-                float dist = (tether.transform.position - transform.position).magnitude;
-                if (minDist == -1 || dist < minDist)
-                {
-                    minDist = dist;
-                    closest = tether;
-                }
-            }
-        }
-
-        return closest;
-    }
-    */
-
     public Tether FindClosestOxygenatedTether(bool oxygenated)
     {
         Tether closest = null;
         float minDist = -1;
-        foreach (Tether tether in tethers)
+        foreach (List<Tether> tethers in network.tethers.Values)
         {
-            if (tether != this && tether.inRange(transform) && tether.hasOxygen == oxygenated)
+            foreach (Tether tether in tethers)
             {
-                float dist = (tether.transform.position - transform.position).magnitude;
-                if (minDist == -1 || dist < minDist)
+                if (tether != this && tether.inRange(transform) && tether.hasOxygen == oxygenated)
                 {
-                    minDist = dist;
-                    closest = tether;
+                    float dist = (tether.transform.position - transform.position).magnitude;
+                    if (minDist == -1 || dist < minDist)
+                    {
+                        minDist = dist;
+                        closest = tether;
+                    }
                 }
             }
         }
 
         return closest;
     }
-
-    /*
-    public Tether FindClosestTether()
-    {
-        Tether closest = null;
-        float minDist = -1;
-        foreach(Tether tether in connectedTethers)
-        {
-            if (tether != this && tether.inRange(transform))
-            {
-                float dist = (tether.transform.position - transform.position).magnitude;
-                if (minDist == -1 || dist < minDist)
-                {
-                    minDist = dist;
-                    closest = tether;
-                }
-            }
-        }
-
-        return closest;
-    }
-    */
     public bool inRange(Transform other)
     {
         Vector3 pos = other.position;

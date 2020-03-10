@@ -8,6 +8,8 @@ public class Player : MonoBehaviour
     public float speed;
 
     public float jumpForce;
+    [Range(0, 10)]
+    public float deformRate;
 
     bool rising = false;
     bool falling = false;
@@ -46,12 +48,12 @@ public class Player : MonoBehaviour
 
         if (Input.GetKey(KeyCode.Q))
         {
-            deform(1);
+            deform(false);
         }
 
         if (Input.GetKey(KeyCode.E))
         {
-            deform(-1);
+            deform(true);
         }
 
         if (Input.GetKey(KeyCode.Escape))
@@ -90,7 +92,7 @@ public class Player : MonoBehaviour
         body.MovePosition(body.position + transform.TransformDirection(moveAmount + momentum) * Time.fixedDeltaTime);
     }
 
-    private void deform(int subtract)
+    private void deform(bool subtract)
     {
         int layerMask = 1 << 0;
 
@@ -98,7 +100,7 @@ public class Player : MonoBehaviour
         Ray ray = camera.ScreenPointToRay(Input.mousePosition);
         if(Physics.Raycast(ray, out hit, 20, layerMask))
         {
-            generator.deform(hit.point, 5, subtract);
+            generator.deform(hit.point, 5, deformRate, subtract);
         } 
     }
 

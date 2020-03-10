@@ -166,7 +166,7 @@ public class TerrainChunk
         }
     }
 
-    public void deform(Vector3 deformCenter, float radius, int subtract)
+    public void deform(Vector3 deformCenter, float radius, float rate, bool subtract)
     {
         int startX = (int)(deformCenter.x - radius);
         int startY = (int)(deformCenter.y - radius);
@@ -192,7 +192,11 @@ public class TerrainChunk
                         if (dist < 5)
                         {
                             int index = (int)relativeToChunk.x * 40 * 40 + (int)relativeToChunk.y * 40 + (int)relativeToChunk.z;
-                            densities[index] -= (dist - 5) * 0.1f * subtract;
+                            float deltaDensity = (dist - 5) * rate;
+
+                            if(subtract) densities[index] -= deltaDensity;
+                            else densities[index] += deltaDensity;
+                            
                             currentDeform.LogDensity(index, densities[index]);
                             updated = true;
                         }

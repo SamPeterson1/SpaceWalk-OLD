@@ -131,6 +131,7 @@ GameObject:
   m_Component:
   - component: {fileID: 106495603}
   - component: {fileID: 106495604}
+  - component: {fileID: 106495605}
   m_Layer: 0
   m_Name: PlanetCenter
   m_TagString: Planet
@@ -164,7 +165,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5b6561605824e74295c0d3e4ccc5cdd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gravity: -14
+  gravity: -10
+--- !u!114 &106495605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 106495602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62eea7b40dc5c854ab1e20c15c3b4c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tetherPrefab: {fileID: 0}
+  updated: 0
 --- !u!1 &321054219
 GameObject:
   m_ObjectHideFlags: 0
@@ -367,8 +382,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 3.0092666e-36, y: 1.6940659e-21, z: 2.3509887e-38,
-    w: 0}
+  m_BoundingSphereOverride: {x: 3.0092666e-36, y: 1.009742e-28, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -590,7 +604,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f470c64a3217f34fb41978cf6c14a60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sensitivity: 2
+  sensitivity: 0
 --- !u!136 &963194232
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -733,9 +747,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sensitivity: 2
-  speed: 20
-  jumpForce: 600
-  teapot: {fileID: 6357508440332135411, guid: 22e14a37927d15d42bdbb48d9fb66429, type: 3}
+  speed: 10
+  jumpForce: 0
+  deformRate: 0
+  teapot: {fileID: 0}
 --- !u!136 &1307280297
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -875,46 +890,47 @@ MonoBehaviour:
   compute: {fileID: 7200000, guid: bbcd2c7d27f592c43a0845389212cff5, type: 3}
   densities: {fileID: 7200000, guid: 0dfd05194f1f0c9449cf315c390b6aec, type: 3}
   colorGen:
-    snowLevel: 6.31
-  dist: 1
+    snowLevel: 0
+  dist: 0
   chunkPrefab: {fileID: 7789772459213316675, guid: 370e5aa4a0bad0c4a9a65328ff2b9aa4,
     type: 3}
   biomes:
-  - type: 2
+  - type: 0
     settings:
-      roughness: 1.69
-      amplitude: 15.66
+      roughness: 5
+      amplitude: 10
       persistence: 0.5
-      baseRoughness: 27.44
+      baseRoughness: 40
       numLayers: 5
-      minRadius: 6.3
+      minRadius: 0
       center: {x: 0, y: 0, z: 0}
   - type: 1
     settings:
-      roughness: 1.7
-      amplitude: 7.09
-      persistence: 0.52
-      baseRoughness: 31.78
+      roughness: 5
+      amplitude: 10
+      persistence: 0.5
+      baseRoughness: 40
       numLayers: 5
-      minRadius: 4.2
+      minRadius: 0
       center: {x: 0, y: 0, z: 0}
-  - type: 0
+  - type: 2
     settings:
-      roughness: 1.74
-      amplitude: 3.18
-      persistence: 0.42
-      baseRoughness: 18.4
+      roughness: 5
+      amplitude: 10
+      persistence: 0.5
+      baseRoughness: 40
       numLayers: 5
-      minRadius: 3
+      minRadius: 0
       center: {x: 0, y: 0, z: 0}
   settings:
-    roughness: 1.69
-    amplitude: 15.66
-    persistence: 0.5
-    baseRoughness: 27.44
-    numLayers: 5
-    minRadius: 6.3
+    roughness: 0
+    amplitude: 0
+    persistence: 0
+    baseRoughness: 0
+    numLayers: 0
+    minRadius: 0
     center: {x: 0, y: 0, z: 0}
+  tetherNetwork: {fileID: 0}
 --- !u!33 &1682199150
 MeshFilter:
   m_ObjectHideFlags: 0
